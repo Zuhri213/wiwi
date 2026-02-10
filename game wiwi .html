@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Teka Teki Negara - Zuhri & Vindi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #e0f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #00796b;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .player {
+            text-align: center;
+        }
+
+        .player-name {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .player1 { color: #d32f2f; }
+        .player2 { color: #1976d2; }
+
+        .score {
+            font-size: 2em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .turn-indicator {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #00796b;
+            color: white;
+        }
+
+        .clue {
+            background-color: #f0f4c3;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            border: 2px solid #00796b;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #004d40;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .correct { background-color: #c8e6c9; color: #2e7d32; }
+        .wrong { background-color: #ffcdd2; color: #b71c1c; }
+        .final { background-color: #bbdefb; color: #0d47a1; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Teka Teki Nama Negara</h1>
+
+        <!-- Papan Skor -->
+        <div class="score-board">
+            <div class="player player1">
+                <div class="player-name">Zuhri</div>
+                <div class="score" id="score1">0</div>
+            </div>
+            <div class="player player2">
+                <div class="player-name">Vindi</div>
+                <div class="score" id="score2">0</div>
+            </div>
+        </div>
+
+        <!-- Indikator Giliran -->
+        <div class="turn-indicator" id="turn">Giliran: Zuhri</div>
+
+        <!-- Petunjuk -->
+        <div class="clue" id="clue">Petunjuk akan muncul di sini...</div>
+
+        <!-- Input Jawaban -->
+        <input type="text" id="answer" placeholder="Tebak nama negara...">
+        <button onclick="checkAnswer()">Cek Jawaban</button>
+
+        <!-- Pesan Hasil -->
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        // Daftar negara dan petunjuk
+        const countryList = [
+            { name: "Indonesia", clue: "Negara kepulauan terbesar di dunia, ibu kota Jakarta" },
+            { name: "Jepang", clue: "Negara dengan matahari terbit, terkenal ramen dan sakura" },
+            { name: "Australia", clue: "Benua sekaligus negara, rumah kanguru dan koala" },
+            { name: "Jerman", clue: "Negara Eropa, terkenal mobil mewah dan Oktoberfest" },
+            { name: "Brazil", clue: "Negara terbesar Amerika Selatan, rumah Hutan Amazon" },
+            { name: "Kanada", clue: "Negara besar Amerika Utara, terkenal maple dan es" },
+            { name: "India", clue: "Negara populasi terbanyak kedua, terkenal Taj Mahal" },
+            { name: "Prancis", clue: "Negara Eropa, terkenal Menara Eiffel dan anggur" },
+            { name: "Mesir", clue: "Negara di Afrika, terkenal Piramida dan Sungai Nil" },
+            { name: "Rusia", clue: "Negara terluas di dunia, mencakup dua benua" }
+        ];
+
+        // Variabel game
+        let currentPlayer = "Zuhri";
+        let score1 = 0;
+        let score2 = 0;
+        let shuffledCountries = [];
+        let currentIndex = 0;
+
+        // Inisialisasi game
+        function initGame() {
+            // Acak urutan negara
+            shuffledCountries = [...countryList].sort(() => Math.random() - 0.5);
+            showNextClue();
+        }
+
+        // Tampilkan petunjuk selanjutnya
+        function showNextClue() {
+            if (currentIndex < shuffledCountries.length) {
+                document.getElementById("clue").textContent = `Petunjuk: ${shuffledCountries[currentIndex].clue}`;
+                document.getElementById("turn").textContent = `Giliran: ${currentPlayer}`;
+                document.getElementById("answer").value = "";
+                document.getElementById("message").textContent = "";
+                document.getElementById("message").className = "message";
+            } else {
+                // Game selesai
+                endGame();
+            }
+        }
+
+        // Cek jawaban pemain
+        function checkAnswer() {
+            const userAnswer = document.getElementById("answer").value.trim().toLowerCase();
+            const correctAnswer = shuffledCountries[currentIndex].name.toLowerCase();
+            const messageEl = document.getElementById("message");
+
+            if (userAnswer === correctAnswer) {
+                // Jawaban benar
+                messageEl.textContent = `Benar sekali! Jawaban: ${shuffledCountries[currentIndex].name}`;
+                messageEl.className = "message correct";
+                
+                // Tambah skor
+                if (currentPlayer === "Zuhri") {
+                    score1++;
+                    document.getElementById("score1").textContent = score1;
+                } else {
+                    score2++;
+                    document.getElementById("score2").textContent = score2;
+                }
+
+                // Lanjut ke soal selanjutnya (giliran tetap sama)
+                currentIndex++;
+                setTimeout(showNextClue, 1500);
+            } else {
+                // Jawaban salah
+                messageEl.textContent = `Salah! Jawaban benar: ${shuffledCountries[currentIndex].name}`;
+                messageEl.className = "message wrong";
+                
+                // Berganti giliran
+                currentPlayer = currentPlayer === "Zuhri" ? "Vindi" : "Zuhri";
+                
+                // Lanjut ke soal selanjutnya
+                currentIndex++;
+                setTimeout(showNextClue, 1500);
+            }
+        }
+
+        // Tampilkan hasil akhir
+        function endGame() {
+            const messageEl = document.getElementById("message");
+            let result = "";
+
+            if (score1 > score2) {
+                result = `Game Selesai! Pemenang: Zuhri dengan skor ${score1} - ${score2}`;
+            } else if (score2 > score1) {
+                result = `Game Selesai! Pemenang: Vindi dengan skor ${score2} - ${score1}`;
+            } else {
+                result = `Game Selesai! Seri dengan skor ${score1} - ${score2}`;
+            }
+
+            messageEl.textContent = result;
+            messageEl.className = "message final";
+            document.getElementById("answer").disabled = true;
+            document.querySelector("button").disabled = true;
+        }
+
+        // Jalankan game saat halaman dimuat
+        window.onload = initGame;
+
+        // Tambah fitur enter untuk submit jawaban
+        document.getElementById("answer").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                checkAnswer();
+            }
+        });
+    </script>
+</body>
+</html>
